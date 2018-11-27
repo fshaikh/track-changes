@@ -22,6 +22,8 @@ const trackChanges = (watchedObj, trackerFn) => {
     return proxy;
 };
 
+
+
 const getProxyHandler = (trackerFn) => {
     let key = '';
     /**
@@ -32,6 +34,13 @@ const getProxyHandler = (trackerFn) => {
          * Defines get trap. Invoked when accessing the targetproperty via proxy
          */
         get: (target, propertyKey, context) => {
+            // first check if the propertyKey is a known property in target
+            // if not, throw a TypeError
+            const isPropertyKnown = isKnownProperty(target, propertyKey);
+            if(!isPropertyKnown){
+                throw new TypeError(`Unknown property ${propertyKey}`);
+            }
+
             const value = Reflect.get(target, propertyKey, context);
             if (typeof value === 'object' && value !== null) {
                 return new Proxy(value, proxyHandler);
@@ -99,7 +108,30 @@ const getProxyHandler = (trackerFn) => {
  */
 const isTargetValid = (watchedObj) => {
     return watchedObj.toString() === '[object Object]' ||
-        toString.call(watchedObj) === '[object Array]'
+           isArray(watchedObj);
+}
+
+/**
+ * Returns true if passed argument is of type array else false
+ * @param {*} obj 
+ */
+const isArray = (obj) => {
+    return toString.call(obj) === '[object Array]'
+}
+
+const SupportedArrayProps = ['push', 'pop', 'sort', 'length'];
+const isKnownArrayProps = propertyKey => SupportedArrayProps.includes(propertyKey);
+
+/**
+ * Returns true if a property is available on target object else false
+ * @param {* Object} target - Target object to check for
+ * @param {* String} propertyKey - Property name
+ */
+const isKnownProperty = (target, propertyKey) => {
+    if(isArray(target) && (isKnownArrayProps(propertyKey))){
+        return true;
+    }
+    return Object.keys(target).includes(propertyKey);
 }
 
 export default trackChanges;

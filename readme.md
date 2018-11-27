@@ -237,3 +237,12 @@ const proxy = trackChanges(array, trackerFn);
 proxy.sort();
 ```
 
+### Allow only access to known object properties
+```js
+const obj = {foo: true};
+const proxy = trackChanges(obj, trackerFn);
+// Throws a TypeError when you try to access an unknown property
+console.log(proxy.bar);
+//=> [TypeError] Unknown property: bar
+```
+

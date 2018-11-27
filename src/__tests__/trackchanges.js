@@ -337,7 +337,7 @@ describe('track changes', () => {
         it('should invoke tracker fn when setting object item value in an array', () => {
             const trackerFn = (opType, propertyKey, newValue, oldValue) => {
                 expect(opType).toEqual(OpType.Set);
-                expect(propertyKey).toEqual(2);
+                expect(propertyKey).toEqual('a');
                 expect(newValue).toEqual(4);
             };
             let array = [1, 2, { a: 3 }];
@@ -361,6 +361,26 @@ describe('track changes', () => {
 
             expect(isInvoked(mock)).toBe(1);
         });
+    });
+});
+
+describe('allow access to only known properties' ,()=>{
+    it('should access the known property',() => {
+        const proxy = getProxyWithoutWatcher(target);
+        const name = proxy.name;
+        expect(name).toEqual(target.name);
+    });
+
+    it('should throw error when accessing unknown property',()=>{
+        const proxy = getProxyWithoutWatcher(target);
+        let error = false;
+        try{
+            proxy.unknownProp;
+        }catch(e){
+            expect(e).toBeDefined();
+            error = true;
+        }
+        expect(error).toEqual(true);
     });
 });
 

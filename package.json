@@ -1,6 +1,7 @@
 {
-  "name": "track-changes",
-  "version": "0.1.0",
+  "name": "@reversecurrent/track-changes",
+  "version": "0.2.0",
+  "private": false,
   "description": "Watch an object or array for changes",
   "main": "index.js",
   "scripts": {
@@ -11,6 +12,7 @@
     "build-babel-watch": "babel ./src --out-dir ./dist --copy-files -w",
     "packagejson": "cpx package.json ./dist/lib",
     "webpack": "webpack",
+    "publish": "npm publish --access public",
     "debug": "node --debug-brk --inspect ./node_modules/jest/bin/jest -i"
   },
   "author": "Furqan Shaikh",
