@@ -125,52 +125,115 @@ const trackerFn = (opType, propertyKey, newValue, oldValue) => {
             // Accessing a nested property will also invoke the tracker function
             proxy.address.geo.encoding.type;
 ```
-## Use-case
 
-I had some code that was like:
-
+### Track when target properties (including nested) are modified
 ```js
-const foo = {
-	a: 0,
-	b: 0
+const trackerFn = (opType, propertyKey, newValue, oldValue) => {
+                console.log(opType);  // OpType.Set
+                console.log(propertyKey) // 'name'('type' when type nested property is set)
+                console.log(newValue) // 'Furqan - modified' ('geo' when type nested property is set)
+            };
+            const proxy = trackChanges(target, trackerFn);
+            // Setting a property will invoke the tracker function
+            proxy.name = 'Furqan - modified';
+            // Setting a nested property will also invoke the tracker function
+            proxy.address.geo.encoding.type = 'geo';
+```
+
+### Track when nested array properties are modified
+```js
+const trackerFn = (opType, propertyKey, newValue, oldValue) => {
+                console.log(opType);  // OpType.Set
+                console.log(propertyKey) // 'professional'
+                console.log(newValue) // [
+                                            // {name: 'Amazon',title: 'Software Engineer'},
+                                            // {name: 'Microsoft',title: 'Technical Lead'},
+                console.log(oldValue) // [
+                                            // {name: 'Amazon',title: 'Software Engineer'},
+                                            // {name: 'Microsoft',title: 'Technical Lead'},
+                                            //{ 'name': 'Google', 'title': 'Design Lead' } ]
+            };
+const proxy = trackChanges(target, trackerFn);
+// Setting a nested array property will invoke the tracker function
+proxy.companies.professional.push({ 'name': 'Google', 'title': 'Design Lead' });
+```
+
+### Track when array value is get/set using index
+```js
+let hobbies = ['tennis'];
+            const trackerFn = (opType, propertyKey, value, oldValue) => {
+                expect(opType).toEqual(OpType.Get);
+                expect(propertyKey).toEqual('0'); 
+                expect(value).toEqual('tennis');
+            };
+            const proxy = trackChanges(hobbies, trackerFn);
+            // Accessing an array item using index will invoke the tracker function
+            proxy[0];
+
+
+            // Setting an array item will invoke the tracker function
+            const trackerFn2 = (opType, propertyKey, value, oldValue) => {
+                expect(opType).toEqual(OpType.Set);
+                expect(propertyKey).toEqual('1'); 
+                expect(value).toEqual('reading');
+            };
+            const proxy2 = trackChanges(hobbies, trackerFn2);
+            proxy2[1] = 'reading';
+```
+
+### Track when setting array value using push
+```js
+let hobbies = ['tennis'];
+            const trackerFn = (opType, propertyKey, value, oldValue) => {
+                expect(opType).toEqual(OpType.Get);
+                expect(propertyKey).toEqual('push');
+                expect(value).toEqual(['tennis', 'reading']);
+            };
+            const proxy = trackChanges(hobbies, trackerFn);
+            // Setting an array item using push will invoke the tracker function
+            proxy.push('reading');
+```
+
+### Track deleting property on target
+```js
+            const trackerFn = (opType, propertyKey, value, oldValue) => {
+                expect(opType).toEqual(OpType.Delete);
+                expect(propertyKey).toEqual('type');
+            };
+            const proxy = trackChanges(target, trackerFn);
+            delete proxy.address.geo.encoding.type;
+```
+
+### Track when calling Object.assign on targets
+```js
+            const trackerFn = (opType, propertyKey, value, oldValue) => {
+                expect(opType).toEqual(OpType.Set);
+                expect(propertyKey).toEqual('phone');
+                expect(newValue).toEqual('1234');
+            };
+            const proxy = trackChanges(target, trackerFn);
+            Object.assign(proxy, { 'phone': '1234' })
+```
+
+### Track when setting a nested object on an array target
+```js
+let array = [1, 2, { a: 3 }];
+const trackerFn = (opType, propertyKey, value, oldValue) => {
+                expect(opType).toEqual(OpType.Set);
+                expect(newValue).toEqual(4);
 };
-
-// …
-
-foo.a = 3;
-save(foo);
-
-// …
-
-foo.b = 7;
-save(foo);
-
-
-// …
-
-foo.a = 10;
-save(foo);
+const proxy = trackChanges(array, trackerFn);
+proxy[2].a = 4;
 ```
 
-Now it can be simplified to:
-
+### Track when calling sort on array target
 ```js
-const foo = trackChanges({
-	a: 0,
-	b: 0
-}, () => save(foo));
-
-// …
-
-foo.a = 3;
-
-// …
-
-foo.b = 7;
-
-// …
-
-foo.a = 10;
+let array = [4,2,1,6,7];
+const trackerFn = (opType, propertyKey, value, oldValue) => {
+                expect(opType).toEqual(OpType.Sort);
+                expect(newValue).toEqual([1,2,4,6,7]);
+};
+const proxy = trackChanges(array, trackerFn);
+proxy.sort();
 ```
-
 

@@ -337,6 +337,7 @@ describe('track changes', () => {
         it('should invoke tracker fn when setting object item value in an array', () => {
             const trackerFn = (opType, propertyKey, newValue, oldValue) => {
                 expect(opType).toEqual(OpType.Set);
+                expect(propertyKey).toEqual(2);
                 expect(newValue).toEqual(4);
             };
             let array = [1, 2, { a: 3 }];
